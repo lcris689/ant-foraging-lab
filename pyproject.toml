@@ -1,0 +1,21 @@
+[project]
+name = "ant-foraging-lab"
+version = "0.1.0"
+description = "Reproducible agent-based experiments in collective ant foraging"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "matplotlib>=3.8,<4",
+  "numpy>=1.26,<3",
+  "pillow>=10,<13",
+  "scipy>=1.11,<2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8,<9",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
