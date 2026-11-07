@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Run reproducible spatial ant-foraging experiments and export the results.">
+    <title>Ant Foraging Lab</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Spatial agent-based simulation</p>
+        <h1>Ant Foraging Lab</h1>
+      </div>
+      <p class="header-note">Configure a seeded run, inspect colony behavior over time, and export reproducible data.</p>
+    </header>
+
+    <main class="lab-shell">
+      <aside class="controls-panel" aria-labelledby="controls-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-index">01</p>
+            <h2 id="controls-title">Experiment</h2>
+          </div>
+          <span class="status-dot" id="api-indicator" title="API status"></span>
+        </div>
+
+        <form id="experiment-form">
+          <fieldset>
+            <legend>Run settings</legend>
+            <div class="field-grid two-columns">
+              <label>Seed<input id="seed" type="number" min="0" max="4294967295" value="689" required></label>
+              <label>Ants<input id="ant-count" type="number" min="1" max="500" value="200" required></label>
+              <label>Grid size<input id="grid-size" type="number" min="20" max="150" value="100" required></label>
+              <label>Max steps<input id="max-steps" type="number" min="1" max="5000" value="1000" required></label>
+              <label>Sample every<input id="frame-stride" type="number" min="1" max="250" value="10" required></label>
+              <label>Stop rule
+                <select id="termination-policy">
+                  <option value="fixed_steps">Fixed steps</option>
+                  <option value="first_feeder_depleted">First feeder empty</option>
+                  <option value="all_feeders_depleted">All feeders empty</option>
+                </select>
+              </label>
+            </div>
+            <div class="field-grid two-columns compact-fields">
+              <label>Nest X<input id="nest-x" type="number" min="0" value="50" required></label>
+              <label>Nest Y<input id="nest-y" type="number" min="0" value="50" required></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Feeders</legend>
+            <div class="feeder-tabs" role="tablist" aria-label="Feeder settings">
+              <button type="button" class="feeder-tab is-active" data-feeder-tab="A">A</button>
+              <button type="button" class="feeder-tab" data-feeder-tab="B">B</button>
+              <button type="button" class="feeder-tab" data-feeder-tab="C">C</button>
+            </div>
+
+            <div class="feeder-form is-active" data-feeder-form="A">
+              <div class="field-grid two-columns">
+                <label>X<input data-field="x" type="number" min="0" value="25" required></label>
+                <label>Y<input data-field="y" type="number" min="0" value="75" required></label>
+                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="0.75" required></label>
+                <label>Food<input data-field="food" type="number" min="1" max="100000" value="1000" required></label>
+                <label>Recruitment<input data-field="recruitment" type="number" min="0" max="1" step="0.001" value="0.75" required></label>
+                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
+              </div>
+            </div>
+            <div class="feeder-form" data-feeder-form="B">
+              <div class="field-grid two-columns">
+                <label>X<input data-field="x" type="number" min="0" value="75" required></label>
+                <label>Y<input data-field="y" type="number" min="0" value="25" required></label>
+                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="0.75" required></label>
+                <label>Food<input data-field="food" type="number" min="1" max="100000" value="1000" required></label>
+                <label>Recruitment<input data-field="recruitment" type="number" min="0" max="1" step="0.001" value="0.75" required></label>
+                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
+              </div>
+            </div>
+            <div class="feeder-form" data-feeder-form="C">
+              <div class="field-grid two-columns">
+                <label>X<input data-field="x" type="number" min="0" value="75" required></label>
+                <label>Y<input data-field="y" type="number" min="0" value="75" required></label>
+                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="0.75" required></label>
+                <label>Food<input data-field="food" type="number" min="1" max="100000" value="1000" required></label>
+                <label>Recruitment<input data-field="recruitment" type="number" min="0" max="1" step="0.001" value="0.75" required></label>
+                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
+              </div>
+            </div>
+          </fieldset>
+
+          <button class="primary-action" id="run-button" type="submit">Run experiment</button>
+          <p class="form-message" id="form-message" aria-live="polite">Ready.</p>
+        </form>
+      </aside>
+
+      <section class="simulation-panel" aria-labelledby="simulation-title">
+        <div class="panel-heading simulation-heading">
+          <div>
+            <p class="section-index">02</p>
+            <h2 id="simulation-title">Colony view</h2>
+          </div>
+          <div class="step-readout"><span>Step</span><strong id="step-value">0</strong></div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="simulation-canvas" width="760" height="620" aria-label="Animated ant simulation grid"></canvas>
+          <div class="canvas-empty" id="canvas-empty">Run an experiment to populate the grid.</div>
+        </div>
+
+        <div class="playback-controls">
+          <button id="play-button" type="button" disabled>Play</button>
+          <label class="timeline-label" for="timeline">Timeline
+            <input id="timeline" type="range" min="0" max="0" value="0" disabled>
+          </label>
+          <label>Speed
+            <select id="playback-speed">
+              <option value="2">2×</option>
+              <option value="6" selected>6×</option>
+              <option value="12">12×</option>
+              <option value="24">24×</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="legend" aria-label="Simulation legend">
+          <span><i class="legend-mark ant-uncommitted"></i>Uncommitted</span>
+          <span><i class="legend-mark feeder-a"></i>Feeder A</span>
+          <span><i class="legend-mark feeder-b"></i>Feeder B</span>
+          <span><i class="legend-mark feeder-c"></i>Feeder C</span>
+          <span><i class="legend-mark carrying"></i>Carrying food</span>
+        </div>
+      </section>
+
+      <aside class="metrics-panel" aria-labelledby="metrics-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-index">03</p>
+            <h2 id="metrics-title">Measurements</h2>
+          </div>
+        </div>
+
+        <dl class="metric-list">
+          <div><dt>Nest food</dt><dd id="metric-nest">—</dd></div>
+          <div><dt>Carrying</dt><dd id="metric-carrying">—</dd></div>
+          <div><dt>Uncommitted</dt><dd id="metric-uncommitted">—</dd></div>
+          <div><dt>Termination</dt><dd id="metric-reason">—</dd></div>
+        </dl>
+
+        <div class="allocation-block">
+          <h3>Allocation</h3>
+          <div id="allocation-bars" class="allocation-bars"><p class="muted">No run data.</p></div>
+        </div>
+
+        <div class="data-actions">
+          <button id="export-json" type="button" disabled>Download run JSON</button>
+          <button id="export-csv" type="button" disabled>Download history CSV</button>
+        </div>
+        <p class="data-note">Run summaries stay in this browser. Detailed traces are downloaded only when requested.</p>
+      </aside>
+
+      <section class="chart-panel" aria-labelledby="chart-title">
+        <div class="panel-heading chart-heading">
+          <div>
+            <p class="section-index">04</p>
+            <h2 id="chart-title">Food over time</h2>
+          </div>
+          <p>Nest deliveries and remaining feeder inventory at sampled steps.</p>
+        </div>
+        <div class="chart-wrap" id="chart-wrap">
+          <svg id="food-chart" role="img" aria-label="Food inventory over time"></svg>
+          <p class="chart-empty" id="chart-empty">Time-series data will appear after a run.</p>
+        </div>
+      </section>
+
+      <section class="history-panel" aria-labelledby="history-title">
+        <div class="panel-heading chart-heading">
+          <div>
+            <p class="section-index">05</p>
+            <h2 id="history-title">Run history</h2>
+          </div>
+          <button id="clear-history" type="button">Clear history</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Seed</th><th>Steps</th><th>Stop reason</th><th>Nest food</th><th>Carrying</th><th>Recorded</th></tr></thead>
+            <tbody id="history-body"><tr><td colspan="6" class="empty-cell">No recorded runs in this browser.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Results describe a simplified stochastic agent-based model, not biological ground truth or a genetic algorithm.</p>
+    </footer>
+  </body>
+</html>
