@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from ant_foraging_lab.experiment import run_experiment
+from ant_foraging_lab.experiment import run_experiment, trace_to_dict
 from ant_foraging_lab.model import (
     FeederConfig,
     Position,
@@ -78,13 +78,29 @@ def test_experiment_trace_is_reproducible_for_the_same_seed():
     assert first == second
 
 
+def test_export_records_versioned_model_and_rng_provenance():
+    trace = run_experiment(
+        small_config(),
+        frame_stride=2,
+        scenario_name='small_test',
+    )
+
+    data = trace_to_dict(trace)
+
+    assert data['provenance']['schema_version'] == 1
+    assert data['provenance']['model_version'] == '0.2.0'
+    assert data['provenance']['scenario_name'] == 'small_test'
+    assert data['provenance']['rng_family'] == 'python.random.Random'
+    assert data['provenance']['python_version']
+
+
 def test_run_api_returns_browser_ready_trace():
     response = client.post('/api/runs', json=api_payload())
 
     assert response.status_code == 200
     body = response.json()
     assert body['result']['steps'] == 6
-    assert body['result']['reason'] == 'max_steps'
+    assert body['result']['reason'] == 'fixed_horizon_complete'
     assert [frame['step'] for frame in body['frames']] == [0, 2, 4, 6]
     assert body['config']['seed'] == 7
     assert body['config']['feeders'][0]['feeder_id'] == 'A'
@@ -110,6 +126,16 @@ def test_run_api_rejects_duplicate_feeder_identifiers():
     assert 'feeder_id values must be unique' in response.text
 
 
+def test_run_api_rejects_the_reserved_uncommitted_feeder_identifier():
+    payload = api_payload()
+    payload['feeders'][0]['feeder_id'] = 'uncommitted'
+
+    response = client.post('/api/runs', json=payload)
+
+    assert response.status_code == 422
+    assert 'reserved' in response.text
+
+
 def test_run_api_bounds_the_number_of_sampled_frames():
     payload = api_payload()
     payload['max_steps'] = 501
@@ -121,9 +147,33 @@ def test_run_api_bounds_the_number_of_sampled_frames():
     assert 'at most 500 sampled frames' in response.text
 
 
+def test_run_api_rejects_requests_above_the_compute_budget():
+    payload = api_payload()
+    payload['ant_count'] = 500
+    payload['max_steps'] = 1000
+    payload['frame_stride'] = 2
+
+    response = client.post('/api/runs', json=payload)
+
+    assert response.status_code == 422
+    assert 'compute budget' in response.text
+
+
 def test_home_page_serves_the_interactive_lab():
     response = client.get('/')
 
     assert response.status_code == 200
     assert 'Ant Foraging Lab' in response.text
     assert 'experiment-form' in response.text
+    assert 'role="tab"' in response.text
+    assert 'aria-selected="true"' in response.text
+    assert 'id="api-status"' in response.text
+    assert 'role="status"' in response.text
+    assert 'Your browser does not support the simulation canvas.' in response.text
+
+
+def test_browser_lab_does_not_start_compute_on_page_load():
+    response = client.get('/app.js')
+
+    assert response.status_code == 200
+    assert response.text.rstrip().endswith('checkHealth();')

@@ -1,5 +1,6 @@
 """Reproducible ant-foraging simulation package."""
 
+from ._version import MODEL_VERSION, TRACE_SCHEMA_VERSION, __version__
 from .model import (
     Ant,
     FeederConfig,
@@ -12,6 +13,8 @@ from .model import (
 )
 
 __all__ = [
+    'MODEL_VERSION',
+    'TRACE_SCHEMA_VERSION',
     'Ant',
     'FeederConfig',
     'Position',
@@ -20,4 +23,5 @@ __all__ = [
     'SimulationConfig',
     'TerminationPolicy',
     'TerminationReason',
+    '__version__',
 ]

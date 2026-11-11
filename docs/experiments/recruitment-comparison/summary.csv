@@ -1,0 +1,3 @@
+scenario,run_count,nest_food_mean,nest_food_median,nest_food_stddev,nest_food_min,nest_food_max,steps_mean,censored_runs
+nest_recruitment,30,43.666666666666664,42.0,10.376808802302383,29,68,2000,0
+no_recruitment,30,42.36666666666667,41.5,8.992269988174836,29,62,2000,0

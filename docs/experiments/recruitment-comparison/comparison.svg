@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title desc">
+<title id="title">Mean food delivered to the nest</title>
+<desc id="desc">Scenario means with one standard deviation error bars across the recorded seed schedule.</desc>
+<rect width="100%" height="100%" fill="#f6efe4"/>
+<text x="45" y="38" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#231f20">Mean food delivered to the nest</text>
+<text x="45" y="62" font-family="system-ui, sans-serif" font-size="13" fill="#5a514a">Bars show the mean; whiskers show ±1 sample standard deviation.</text>
+<line x1="90" y1="80" x2="90" y2="430" stroke="#514941" stroke-width="2"/>
+<line x1="90" y1="430" x2="860" y2="430" stroke="#514941" stroke-width="2"/>
+<line x1="90" y1="430.00" x2="860" y2="430.00" stroke="#d8ccc0" stroke-width="1"/>
+<text x="78" y="434.00" text-anchor="end" font-family="system-ui, sans-serif" font-size="12" fill="#5a514a">0.0</text>
+<line x1="90" y1="360.00" x2="860" y2="360.00" stroke="#d8ccc0" stroke-width="1"/>
+<text x="78" y="364.00" text-anchor="end" font-family="system-ui, sans-serif" font-size="12" fill="#5a514a">11.9</text>
+<line x1="90" y1="290.00" x2="860" y2="290.00" stroke="#d8ccc0" stroke-width="1"/>
+<text x="78" y="294.00" text-anchor="end" font-family="system-ui, sans-serif" font-size="12" fill="#5a514a">23.8</text>
+<line x1="90" y1="220.00" x2="860" y2="220.00" stroke="#d8ccc0" stroke-width="1"/>
+<text x="78" y="224.00" text-anchor="end" font-family="system-ui, sans-serif" font-size="12" fill="#5a514a">35.7</text>
+<line x1="90" y1="150.00" x2="860" y2="150.00" stroke="#d8ccc0" stroke-width="1"/>
+<text x="78" y="154.00" text-anchor="end" font-family="system-ui, sans-serif" font-size="12" fill="#5a514a">47.6</text>
+<line x1="90" y1="80.00" x2="860" y2="80.00" stroke="#d8ccc0" stroke-width="1"/>
+<text x="78" y="84.00" text-anchor="end" font-family="system-ui, sans-serif" font-size="12" fill="#5a514a">59.4</text>
+<rect x="222.50" y="172.91" width="120.00" height="257.09" rx="4" fill="#c65d3b"/>
+<line x1="282.50" y1="111.82" x2="282.50" y2="234.01" stroke="#231f20" stroke-width="2"/>
+<line x1="272.50" y1="111.82" x2="292.50" y2="111.82" stroke="#231f20" stroke-width="2"/>
+<line x1="272.50" y1="234.01" x2="292.50" y2="234.01" stroke="#231f20" stroke-width="2"/>
+<text x="282.50" y="101.82" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#231f20">43.7</text>
+<text x="282.50" y="458" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#231f20">nest_recruitment</text>
+<text x="282.50" y="478" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#5a514a">n=30</text>
+<rect x="607.50" y="180.57" width="120.00" height="249.43" rx="4" fill="#2f6f66"/>
+<line x1="667.50" y1="127.62" x2="667.50" y2="233.51" stroke="#231f20" stroke-width="2"/>
+<line x1="657.50" y1="127.62" x2="677.50" y2="127.62" stroke="#231f20" stroke-width="2"/>
+<line x1="657.50" y1="233.51" x2="677.50" y2="233.51" stroke="#231f20" stroke-width="2"/>
+<text x="667.50" y="117.62" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#231f20">42.4</text>
+<text x="667.50" y="458" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#231f20">no_recruitment</text>
+<text x="667.50" y="478" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#5a514a">n=30</text>
+</svg>

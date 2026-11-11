@@ -24,7 +24,8 @@
             <p class="section-index">01</p>
             <h2 id="controls-title">Experiment</h2>
           </div>
-          <span class="status-dot" id="api-indicator" title="API status"></span>
+          <span class="status-dot" id="api-indicator" title="API status" aria-hidden="true"></span>
+          <span class="sr-only" id="api-status" role="status" aria-live="polite">Checking simulation API status.</span>
         </div>
 
         <form id="experiment-form">
@@ -53,12 +54,12 @@
           <fieldset>
             <legend>Feeders</legend>
             <div class="feeder-tabs" role="tablist" aria-label="Feeder settings">
-              <button type="button" class="feeder-tab is-active" data-feeder-tab="A">A</button>
-              <button type="button" class="feeder-tab" data-feeder-tab="B">B</button>
-              <button type="button" class="feeder-tab" data-feeder-tab="C">C</button>
+              <button type="button" class="feeder-tab is-active" id="feeder-tab-a" role="tab" aria-selected="true" aria-controls="feeder-panel-a" tabindex="0" data-feeder-tab="A">A</button>
+              <button type="button" class="feeder-tab" id="feeder-tab-b" role="tab" aria-selected="false" aria-controls="feeder-panel-b" tabindex="-1" data-feeder-tab="B">B</button>
+              <button type="button" class="feeder-tab" id="feeder-tab-c" role="tab" aria-selected="false" aria-controls="feeder-panel-c" tabindex="-1" data-feeder-tab="C">C</button>
             </div>
 
-            <div class="feeder-form is-active" data-feeder-form="A">
+            <div class="feeder-form is-active" id="feeder-panel-a" role="tabpanel" aria-labelledby="feeder-tab-a" data-feeder-form="A">
               <div class="field-grid two-columns">
                 <label>X<input data-field="x" type="number" min="0" value="25" required></label>
                 <label>Y<input data-field="y" type="number" min="0" value="75" required></label>
@@ -68,7 +69,7 @@
                 <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
               </div>
             </div>
-            <div class="feeder-form" data-feeder-form="B">
+            <div class="feeder-form" id="feeder-panel-b" role="tabpanel" aria-labelledby="feeder-tab-b" data-feeder-form="B" hidden>
               <div class="field-grid two-columns">
                 <label>X<input data-field="x" type="number" min="0" value="75" required></label>
                 <label>Y<input data-field="y" type="number" min="0" value="25" required></label>
@@ -78,7 +79,7 @@
                 <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
               </div>
             </div>
-            <div class="feeder-form" data-feeder-form="C">
+            <div class="feeder-form" id="feeder-panel-c" role="tabpanel" aria-labelledby="feeder-tab-c" data-feeder-form="C" hidden>
               <div class="field-grid two-columns">
                 <label>X<input data-field="x" type="number" min="0" value="75" required></label>
                 <label>Y<input data-field="y" type="number" min="0" value="75" required></label>
@@ -105,7 +106,7 @@
         </div>
 
         <div class="canvas-wrap">
-          <canvas id="simulation-canvas" width="760" height="620" aria-label="Animated ant simulation grid"></canvas>
+          <canvas id="simulation-canvas" width="760" height="620" aria-label="Animated ant simulation grid">Your browser does not support the simulation canvas.</canvas>
           <div class="canvas-empty" id="canvas-empty">Run an experiment to populate the grid.</div>
         </div>
 

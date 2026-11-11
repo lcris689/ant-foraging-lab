@@ -11,6 +11,7 @@ const form = document.querySelector('#experiment-form');
 const runButton = document.querySelector('#run-button');
 const formMessage = document.querySelector('#form-message');
 const apiIndicator = document.querySelector('#api-indicator');
+const apiStatus = document.querySelector('#api-status');
 const canvas = document.querySelector('#simulation-canvas');
 const context = canvas.getContext('2d');
 const canvasEmpty = document.querySelector('#canvas-empty');
@@ -398,16 +399,42 @@ async function checkHealth() {
     if (!response.ok) throw new Error();
     apiIndicator.classList.add('is-online');
     apiIndicator.title = 'Simulation API online';
+    apiStatus.textContent = 'Simulation API online.';
   } catch {
     apiIndicator.classList.add('is-error');
     apiIndicator.title = 'Simulation API unavailable';
+    apiStatus.textContent = 'Simulation API unavailable.';
   }
 }
 
-document.querySelectorAll('.feeder-tab').forEach((tab) => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.feeder-tab').forEach((item) => item.classList.toggle('is-active', item === tab));
-    document.querySelectorAll('.feeder-form').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.feederForm === tab.dataset.feederTab));
+const feederTabs = [...document.querySelectorAll('.feeder-tab')];
+
+function activateFeederTab(tab) {
+  feederTabs.forEach((item) => {
+    const active = item === tab;
+    item.classList.toggle('is-active', active);
+    item.setAttribute('aria-selected', String(active));
+    item.tabIndex = active ? 0 : -1;
+  });
+  document.querySelectorAll('.feeder-form').forEach((panel) => {
+    const active = panel.dataset.feederForm === tab.dataset.feederTab;
+    panel.classList.toggle('is-active', active);
+    panel.hidden = !active;
+  });
+}
+
+feederTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activateFeederTab(tab));
+  tab.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    let nextIndex = index;
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + feederTabs.length) % feederTabs.length;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % feederTabs.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = feederTabs.length - 1;
+    activateFeederTab(feederTabs[nextIndex]);
+    feederTabs[nextIndex].focus();
   });
 });
 
@@ -436,4 +463,3 @@ new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
 window.addEventListener('beforeunload', stopPlayback);
 renderHistory();
 checkHealth();
-runExperiment();

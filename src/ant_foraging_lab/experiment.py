@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from platform import python_version
 
+from ._version import MODEL_VERSION, TRACE_SCHEMA_VERSION
 from .model import Position, RunResult, Simulation, SimulationConfig
 
 
@@ -24,7 +26,17 @@ class ExperimentFrame:
 
 
 @dataclass(frozen=True)
+class ExperimentProvenance:
+    schema_version: int
+    model_version: str
+    scenario_name: str
+    rng_family: str
+    python_version: str
+
+
+@dataclass(frozen=True)
 class ExperimentTrace:
+    provenance: ExperimentProvenance
     config: SimulationConfig
     frame_stride: int
     frames: tuple[ExperimentFrame, ...]
@@ -63,9 +75,12 @@ def run_experiment(
     config: SimulationConfig,
     *,
     frame_stride: int = 10,
+    scenario_name: str = 'custom',
 ) -> ExperimentTrace:
     if frame_stride < 1:
         raise ValueError('frame_stride must be at least 1')
+    if not isinstance(scenario_name, str) or not scenario_name.strip():
+        raise ValueError('scenario_name must be a non-empty string')
 
     simulation = Simulation(config)
     frames = [_capture(simulation)]
@@ -81,6 +96,13 @@ def run_experiment(
         frames.append(_capture(simulation))
 
     return ExperimentTrace(
+        provenance=ExperimentProvenance(
+            schema_version=TRACE_SCHEMA_VERSION,
+            model_version=MODEL_VERSION,
+            scenario_name=scenario_name,
+            rng_family='python.random.Random',
+            python_version=python_version(),
+        ),
         config=config,
         frame_stride=frame_stride,
         frames=tuple(frames),

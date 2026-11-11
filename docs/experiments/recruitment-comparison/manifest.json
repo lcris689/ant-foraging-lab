@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "model_version": "0.2.0",
+  "scenarios": [
+    "nest_recruitment",
+    "no_recruitment"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29
+  ],
+  "max_steps": 2000,
+  "run_count": 60,
+  "outputs": [
+    "runs.csv",
+    "summary.csv",
+    "comparison.svg"
+  ],
+  "sha256": {
+    "runs.csv": "6426b39a35fc9997183ff08b3f5ee35f0a7f3f72656beca357ad47ac2ea390d4",
+    "summary.csv": "83a361a48ee329cec4f35f737147fce449d65a87050a5169f98031de02b3f9b5",
+    "comparison.svg": "bc29d5b2056378c82d53e5924ca2e87935d882517d0fc931bf6eea5b8220c9f1"
+  }
+}

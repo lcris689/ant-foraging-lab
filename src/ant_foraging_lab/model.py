@@ -5,9 +5,22 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
+from math import isfinite
 from typing import Protocol, TypeVar
 
 T = TypeVar('T')
+
+
+def _require_int(name: str, value: object) -> None:
+    if type(value) is not int:
+        raise TypeError(f'{name} must be an integer')
+
+
+def _require_probability(name: str, value: object) -> None:
+    if type(value) not in (int, float):
+        raise TypeError(f'{name} must be a finite number')
+    if not isfinite(value) or not 0 <= value <= 1:
+        raise ValueError(f'{name} must be between 0 and 1')
 
 
 class RandomSource(Protocol):
@@ -23,7 +36,8 @@ class TerminationPolicy(Enum):
 
 
 class TerminationReason(Enum):
-    MAX_STEPS = 'max_steps'
+    FIXED_HORIZON_COMPLETE = 'fixed_horizon_complete'
+    MAX_STEPS_CENSORED = 'max_steps_censored'
     FIRST_FEEDER_DEPLETED = 'first_feeder_depleted'
     ALL_FEEDERS_DEPLETED = 'all_feeders_depleted'
 
@@ -32,6 +46,10 @@ class TerminationReason(Enum):
 class Position:
     x: int
     y: int
+
+    def __post_init__(self) -> None:
+        if type(self.x) is not int or type(self.y) is not int:
+            raise TypeError('position coordinates must be integers')
 
     def is_adjacent_to(self, other: Position) -> bool:
         return abs(self.x - other.x) + abs(self.y - other.y) == 1
@@ -47,12 +65,13 @@ class FeederConfig:
     food: int
 
     def __post_init__(self) -> None:
-        if not self.feeder_id:
+        if not isinstance(self.feeder_id, str):
+            raise TypeError('feeder_id must be a string')
+        if not self.feeder_id.strip():
             raise ValueError('feeder_id must not be empty')
         for field_name in ('quality', 'recruitment_rate', 'attrition_rate'):
-            value = getattr(self, field_name)
-            if not 0 <= value <= 1:
-                raise ValueError(f'{field_name} must be between 0 and 1')
+            _require_probability(field_name, getattr(self, field_name))
+        _require_int('food', self.food)
         if self.food < 0:
             raise ValueError('food must not be negative')
 
@@ -68,6 +87,8 @@ class SimulationConfig:
     termination_policy: TerminationPolicy = TerminationPolicy.FIXED_STEPS
 
     def __post_init__(self) -> None:
+        for field_name in ('grid_size', 'ant_count', 'max_steps', 'seed'):
+            _require_int(field_name, getattr(self, field_name))
         if not isinstance(self.termination_policy, TerminationPolicy):
             raise TypeError('termination_policy must be a TerminationPolicy')
         if self.grid_size < 1:
@@ -81,6 +102,8 @@ class SimulationConfig:
         feeder_ids = [feeder.feeder_id for feeder in self.feeders]
         if len(feeder_ids) != len(set(feeder_ids)):
             raise ValueError('feeder_id values must be unique')
+        if 'uncommitted' in feeder_ids:
+            raise ValueError("feeder_id 'uncommitted' is reserved for ant state")
         feeder_positions = [feeder.position for feeder in self.feeders]
         if len(feeder_positions) != len(set(feeder_positions)):
             raise ValueError('feeder positions must be unique')
@@ -163,10 +186,11 @@ class Simulation:
     def update_social_state(self, *, committed_at_start: frozenset[int]) -> None:
         """Apply one synchronous recruitment/attrition phase.
 
-        Each eligible recruiter selects at most one neighboring uncommitted ant
-        and performs one Bernoulli recruitment attempt. State changes are queued
-        and applied after all decisions, preventing same-step recruitment chains.
-        Attrition applies only to ants that were committed at phase start.
+        Each eligible recruiter at the nest selects at most one uncommitted ant
+        at the nest and performs one Bernoulli recruitment attempt. State changes
+        are queued and applied after all decisions, preventing same-step
+        recruitment chains. Attrition applies only to ants that were committed
+        at phase start.
         """
         ants_by_id = {ant.ant_id: ant for ant in self.ants}
         commitments_at_phase_start = {
@@ -182,14 +206,19 @@ class Simulation:
 
         for recruiter_id in sorted(committed_at_start):
             recruiter = ants_by_id.get(recruiter_id)
-            if recruiter is None or recruiter.commitment is None:
+            if (
+                recruiter is None
+                or recruiter.commitment is None
+                or recruiter.position != self.config.nest
+                or recruiter.holding_food
+            ):
                 continue
             feeder = self.feeders[recruiter.commitment]
             candidates = sorted(
                 (
                     ants_by_id[ant_id]
                     for ant_id in uncommitted_at_phase_start
-                    if recruiter.position.is_adjacent_to(ants_by_id[ant_id].position)
+                    if ants_by_id[ant_id].position == self.config.nest
                 ),
                 key=lambda ant: ant.ant_id,
             )
@@ -243,15 +272,20 @@ class Simulation:
             reason = self.step()
             if reason is not None:
                 return self._result(reason)
-        return self._result(TerminationReason.MAX_STEPS)
+        return self._result(self._step_bound_reason())
 
     def termination_reason(self) -> TerminationReason | None:
         depletion_reason = self._termination_reason()
         if depletion_reason is not None:
             return depletion_reason
         if self.steps >= self.config.max_steps:
-            return TerminationReason.MAX_STEPS
+            return self._step_bound_reason()
         return None
+
+    def _step_bound_reason(self) -> TerminationReason:
+        if self.config.termination_policy is TerminationPolicy.FIXED_STEPS:
+            return TerminationReason.FIXED_HORIZON_COMPLETE
+        return TerminationReason.MAX_STEPS_CENSORED
 
     def _move_ant(self, ant: Ant) -> None:
         if ant.holding_food:
@@ -330,7 +364,10 @@ class Simulation:
         return None
 
     def _result(self, reason: TerminationReason) -> RunResult:
-        counts: dict[str | None, int] = defaultdict(int)
+        counts: dict[str | None, int] = {
+            None: 0,
+            **{feeder_id: 0 for feeder_id in self.feeders},
+        }
         for ant in self.ants:
             counts[ant.commitment] += 1
         return RunResult(

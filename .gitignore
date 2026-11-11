@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+.DS_Store
+.idea/
+.vscode/
+.hermes/
+
+# Generated experiment output
+artifacts/
+results/
+
+# Private source records
+*.docx
+*.zip

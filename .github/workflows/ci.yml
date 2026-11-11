@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install locked development environment
+        run: uv sync --frozen
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Lint
+        run: uv run ruff check src tests
+
+      - name: Build distributions
+        run: UV_FROZEN=1 uv build
+
+      - name: Verify clean wheel installation
+        shell: bash
+        run: |
+          uv venv /tmp/ant-foraging-wheel
+          uv pip install --python /tmp/ant-foraging-wheel/bin/python dist/*.whl
+          /tmp/ant-foraging-wheel/bin/python -c "import ant_foraging_lab; from ant_foraging_lab.web import app; assert app.version == ant_foraging_lab.__version__"
+          /tmp/ant-foraging-wheel/bin/ant-foraging-lab-batch --help >/dev/null

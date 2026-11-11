@@ -1,9 +1,11 @@
+from math import ceil
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 
+from ._version import __version__
 from .experiment import run_experiment, trace_to_dict
 from .model import FeederConfig, Position, SimulationConfig, TerminationPolicy
 
@@ -37,6 +39,8 @@ class RunRequest(BaseModel):
         feeder_ids = [feeder.feeder_id for feeder in self.feeders]
         if len(feeder_ids) != len(set(feeder_ids)):
             raise ValueError('feeder_id values must be unique')
+        if 'uncommitted' in feeder_ids:
+            raise ValueError("feeder_id 'uncommitted' is reserved for ant state")
         feeder_positions = [
             (feeder.position.x, feeder.position.y)
             for feeder in self.feeders
@@ -45,6 +49,11 @@ class RunRequest(BaseModel):
             raise ValueError('feeder positions must be unique')
         if self.max_steps > self.frame_stride * 500:
             raise ValueError('a run may contain at most 500 sampled frames')
+        if self.ant_count * self.max_steps > 250_000:
+            raise ValueError('the requested run exceeds the compute budget')
+        sampled_frames = ceil(self.max_steps / self.frame_stride) + 1
+        if self.ant_count * sampled_frames > 50_000:
+            raise ValueError('the requested trace exceeds the response budget')
         points = [('nest', self.nest), *[
             (f'feeder {feeder.feeder_id}', feeder.position)
             for feeder in self.feeders
@@ -79,7 +88,7 @@ class RunRequest(BaseModel):
 app = FastAPI(
     title='Ant Foraging Lab',
     description='Run reproducible spatial ant-foraging experiments.',
-    version='0.1.0',
+    version=__version__,
 )
 
 
