@@ -1,14 +1,18 @@
 from math import ceil
 from pathlib import Path
-from typing import Literal
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._version import __version__
 from .experiment import run_experiment, trace_to_dict
 from .model import FeederConfig, Position, SimulationConfig, TerminationPolicy
+from .scenarios import (
+    guided_demo_scenario,
+    no_recruitment_guided_demo,
+    three_feeder_scenario,
+)
 
 
 class PositionInput(BaseModel):
@@ -26,12 +30,8 @@ class FeederInput(BaseModel):
 
 
 class RunRequest(BaseModel):
-    scenario_name: Literal[
-        'custom',
-        'guided_demo',
-        'reference_experiment',
-        'guided_no_recruitment',
-    ] = 'custom'
+    model_config = ConfigDict(extra='forbid')
+
     seed: int = Field(ge=0, le=2**32 - 1)
     grid_size: int = Field(ge=2, le=150)
     nest: PositionInput
@@ -98,6 +98,23 @@ app = FastAPI(
     version=__version__,
 )
 
+BROWSER_PRESETS = (
+    ('guided_demo', guided_demo_scenario(seed=689, max_steps=400), 4),
+    ('reference_experiment', three_feeder_scenario(seed=689, max_steps=1_000), 10),
+    (
+        'guided_no_recruitment',
+        no_recruitment_guided_demo(seed=689, max_steps=400),
+        4,
+    ),
+)
+
+
+def _scenario_name(config: SimulationConfig, frame_stride: int) -> str:
+    for name, preset_config, preset_stride in BROWSER_PRESETS:
+        if config == preset_config and frame_stride == preset_stride:
+            return name
+    return 'custom'
+
 
 @app.get('/api/health')
 def health() -> dict[str, str]:
@@ -106,10 +123,11 @@ def health() -> dict[str, str]:
 
 @app.post('/api/runs')
 def create_run(request: RunRequest) -> dict:
+    config = request.to_config()
     trace = run_experiment(
-        request.to_config(),
+        config,
         frame_stride=request.frame_stride,
-        scenario_name=request.scenario_name,
+        scenario_name=_scenario_name(config, request.frame_stride),
     )
     return trace_to_dict(trace)
 

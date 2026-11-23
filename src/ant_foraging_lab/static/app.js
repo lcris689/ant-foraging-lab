@@ -9,7 +9,6 @@ const COLORS = {
 
 const PRESETS = {
   guided: {
-    scenarioName: 'guided_demo',
     description: 'A compact teaching setup that makes discovery, recruitment, and delivery easier to observe. It is not comparative evidence.',
     seed: 689,
     antCount: 120,
@@ -25,7 +24,6 @@ const PRESETS = {
     },
   },
   reference: {
-    scenarioName: 'reference_experiment',
     description: 'The published 100 × 100 reference configuration. Exact-cell discovery is intentionally sparse and is best interpreted across seed sets.',
     seed: 689,
     antCount: 200,
@@ -41,7 +39,6 @@ const PRESETS = {
     },
   },
   noRecruitment: {
-    scenarioName: 'guided_no_recruitment',
     description: 'The guided setup with recruitment set to zero. Compare it with the guided demo using the same seed.',
     seed: 689,
     antCount: 120,
@@ -130,7 +127,6 @@ function feederPayload(feederId) {
 
 function buildPayload() {
   return {
-    scenario_name: PRESETS[presetSelect.value]?.scenarioName || 'custom',
     seed: numberValue('#seed'),
     grid_size: numberValue('#grid-size'),
     nest: { x: numberValue('#nest-x'), y: numberValue('#nest-y') },

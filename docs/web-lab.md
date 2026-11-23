@@ -104,7 +104,7 @@ Example request:
 
 The response contains:
 
-- `provenance`: trace schema, package version, model version, scenario label, Python version, and random-generator family;
+- `provenance`: trace schema, package version, model version, a server-derived scenario label, Python version, and random-generator family. A named label is used only when the full configuration and sampling stride exactly match that preset;
 - `config`: the validated configuration;
 - `frame_stride`: the sampling interval;
 - `frames`: sampled positions and aggregate measurements, including initial and final state;

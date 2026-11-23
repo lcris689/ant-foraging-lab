@@ -7,7 +7,11 @@ from ant_foraging_lab.model import (
     Simulation,
     SimulationConfig,
 )
-from ant_foraging_lab.scenarios import guided_demo_scenario
+from ant_foraging_lab.scenarios import (
+    guided_demo_scenario,
+    no_recruitment_guided_demo,
+    three_feeder_scenario,
+)
 from ant_foraging_lab.web import app
 
 client = TestClient(app)
@@ -53,6 +57,29 @@ def api_payload() -> dict:
                 'attrition_rate': 0.04,
                 'food': 12,
             },
+        ],
+    }
+
+
+def api_payload_for_config(config: SimulationConfig, *, frame_stride: int) -> dict:
+    return {
+        'seed': config.seed,
+        'grid_size': config.grid_size,
+        'nest': {'x': config.nest.x, 'y': config.nest.y},
+        'ant_count': config.ant_count,
+        'max_steps': config.max_steps,
+        'frame_stride': frame_stride,
+        'termination_policy': config.termination_policy.value,
+        'feeders': [
+            {
+                'feeder_id': feeder.feeder_id,
+                'position': {'x': feeder.position.x, 'y': feeder.position.y},
+                'quality': feeder.quality,
+                'recruitment_rate': feeder.recruitment_rate,
+                'attrition_rate': feeder.attrition_rate,
+                'food': feeder.food,
+            }
+            for feeder in config.feeders
         ],
     }
 
@@ -182,14 +209,32 @@ def test_run_api_returns_browser_ready_trace():
     assert body['config']['feeders'][0]['feeder_id'] == 'A'
 
 
-def test_api_preserves_selected_preset_in_export_provenance():
+def test_api_derives_named_presets_from_the_submitted_configuration():
+    presets = (
+        ('guided_demo', guided_demo_scenario(seed=689, max_steps=400), 4),
+        ('reference_experiment', three_feeder_scenario(seed=689, max_steps=1_000), 10),
+        (
+            'guided_no_recruitment',
+            no_recruitment_guided_demo(seed=689, max_steps=400),
+            4,
+        ),
+    )
+
+    for expected_name, config, frame_stride in presets:
+        request = api_payload_for_config(config, frame_stride=frame_stride)
+        response = client.post('/api/runs', json=request)
+
+        assert response.status_code == 200
+        assert response.json()['provenance']['scenario_name'] == expected_name
+
+
+def test_api_does_not_accept_a_user_supplied_preset_label():
     request = api_payload()
     request['scenario_name'] = 'guided_demo'
 
     response = client.post('/api/runs', json=request)
 
-    assert response.status_code == 200
-    assert response.json()['provenance']['scenario_name'] == 'guided_demo'
+    assert response.status_code == 422
 
 
 def test_run_api_rejects_a_feeder_outside_the_grid():
@@ -295,10 +340,7 @@ def test_browser_lab_defines_presets_and_replays_events_from_the_start():
     assert 'noRecruitment:' in response.text
     assert 'currentFrameIndex = 0;' in response.text
     assert 'function renderEventLog' in response.text
-    assert "scenarioName: 'guided_demo'" in response.text
-    assert "scenarioName: 'reference_experiment'" in response.text
-    assert "scenarioName: 'guided_no_recruitment'" in response.text
-    assert "scenario_name: PRESETS[presetSelect.value]?.scenarioName || 'custom'" in response.text
+    assert 'scenario_name:' not in response.text
 
 
 def test_mobile_layout_places_configuration_before_the_empty_simulation():

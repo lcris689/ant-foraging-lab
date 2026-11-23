@@ -130,6 +130,16 @@ def _step_events(
                 value=milestone,
             ))
 
+    for feeder_id in sorted(simulation.feeder_food):
+        if previous_feeder_food[feeder_id] > 0 and simulation.feeder_food[feeder_id] == 0:
+            events.append(ExperimentEvent(
+                step=simulation.steps,
+                kind='feeder_depleted',
+                title=f'Feeder {feeder_id} depleted',
+                detail=f'No food remains at feeder {feeder_id}.',
+                feeder_id=feeder_id,
+            ))
+
     if not recruitment_recorded and simulation.last_recruitments:
         _, feeder_id = simulation.last_recruitments[0]
         recruitment_recorded = True
@@ -143,16 +153,6 @@ def _step_events(
             ),
             feeder_id=feeder_id,
         ))
-
-    for feeder_id in sorted(simulation.feeder_food):
-        if previous_feeder_food[feeder_id] > 0 and simulation.feeder_food[feeder_id] == 0:
-            events.append(ExperimentEvent(
-                step=simulation.steps,
-                kind='feeder_depleted',
-                title=f'Feeder {feeder_id} depleted',
-                detail=f'No food remains at feeder {feeder_id}.',
-                feeder_id=feeder_id,
-            ))
 
     return events, recruitment_recorded
 
