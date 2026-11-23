@@ -24,8 +24,11 @@ Open <http://127.0.0.1:8000> and choose a seed, run length, colony size, stoppin
 
 The interface provides:
 
+- guided, reference, and matched recruitment-off presets;
+- an in-page guide explaining every variable and its expected directional effect;
 - an animated spatial replay of ants, the nest, and three feeders;
 - live commitment, carrying, inventory, and nest-delivery measurements;
+- a timeline-aware log of feeder discoveries, delivery and recruitment milestones, depletion, and completion;
 - a sampled food-inventory time series;
 - browser-local run history;
 - detailed JSON trace downloads and summary CSV exports.
@@ -36,12 +39,13 @@ Run history is stored only in the browser's local storage. The application does 
 
 Every recorded experiment includes:
 
-- the trace schema, model version, Python version, and random-generator family;
+- the trace schema, package version, model version, Python version, and random-generator family;
 - a named scenario or `custom` provenance label;
 - the random seed used by the simulation;
 - grid, nest, colony, feeder, and stopping-rule configuration;
 - the number of completed steps and termination reason;
 - sampled ant positions and states;
+- significant events recorded at their exact simulation steps;
 - feeder inventory, carried food, nest deliveries, and commitment counts.
 
 A run is bounded by `max_steps`. Repeating the same configuration and seed with the same recorded model and runtime provenance produces the same trace. Custom random sources must provide their own explicit seed provenance before a result can be recorded.

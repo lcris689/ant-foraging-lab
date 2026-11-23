@@ -7,9 +7,62 @@ const COLORS = {
   carrying: '#f2d36e',
 };
 
+const PRESETS = {
+  guided: {
+    scenarioName: 'guided_demo',
+    description: 'A compact teaching setup that makes discovery, recruitment, and delivery easier to observe. It is not comparative evidence.',
+    seed: 689,
+    antCount: 120,
+    gridSize: 40,
+    maxSteps: 400,
+    frameStride: 4,
+    terminationPolicy: 'fixed_steps',
+    nest: { x: 20, y: 20 },
+    feeders: {
+      A: { x: 10, y: 20, quality: 1, food: 1000, recruitment: .75, attrition: .003 },
+      B: { x: 30, y: 20, quality: 1, food: 1000, recruitment: .75, attrition: .003 },
+      C: { x: 20, y: 30, quality: 1, food: 1000, recruitment: .75, attrition: .003 },
+    },
+  },
+  reference: {
+    scenarioName: 'reference_experiment',
+    description: 'The published 100 × 100 reference configuration. Exact-cell discovery is intentionally sparse and is best interpreted across seed sets.',
+    seed: 689,
+    antCount: 200,
+    gridSize: 100,
+    maxSteps: 1000,
+    frameStride: 10,
+    terminationPolicy: 'fixed_steps',
+    nest: { x: 50, y: 50 },
+    feeders: {
+      A: { x: 25, y: 75, quality: .75, food: 1000, recruitment: .75, attrition: .009 },
+      B: { x: 75, y: 25, quality: .75, food: 1000, recruitment: .75, attrition: .009 },
+      C: { x: 75, y: 75, quality: .75, food: 1000, recruitment: .75, attrition: .009 },
+    },
+  },
+  noRecruitment: {
+    scenarioName: 'guided_no_recruitment',
+    description: 'The guided setup with recruitment set to zero. Compare it with the guided demo using the same seed.',
+    seed: 689,
+    antCount: 120,
+    gridSize: 40,
+    maxSteps: 400,
+    frameStride: 4,
+    terminationPolicy: 'fixed_steps',
+    nest: { x: 20, y: 20 },
+    feeders: {
+      A: { x: 10, y: 20, quality: 1, food: 1000, recruitment: 0, attrition: .003 },
+      B: { x: 30, y: 20, quality: 1, food: 1000, recruitment: 0, attrition: .003 },
+      C: { x: 20, y: 30, quality: 1, food: 1000, recruitment: 0, attrition: .003 },
+    },
+  },
+};
+
 const form = document.querySelector('#experiment-form');
 const runButton = document.querySelector('#run-button');
 const formMessage = document.querySelector('#form-message');
+const presetSelect = document.querySelector('#preset');
+const presetNote = document.querySelector('#preset-note');
 const apiIndicator = document.querySelector('#api-indicator');
 const apiStatus = document.querySelector('#api-status');
 const canvas = document.querySelector('#simulation-canvas');
@@ -22,14 +75,44 @@ const stepValue = document.querySelector('#step-value');
 const chart = document.querySelector('#food-chart');
 const chartEmpty = document.querySelector('#chart-empty');
 const historyBody = document.querySelector('#history-body');
+const eventLog = document.querySelector('#event-log');
 
 let currentTrace = null;
 let currentFrameIndex = 0;
 let playbackTimer = null;
 let runHistory = loadHistory();
+let renderedEventCount = -1;
 
 function numberValue(selector) {
   return Number(document.querySelector(selector).value);
+}
+
+function setValue(selector, value) {
+  document.querySelector(selector).value = String(value);
+}
+
+function applyPreset(presetName) {
+  const preset = PRESETS[presetName];
+  if (!preset) {
+    presetNote.textContent = 'Custom settings. Change one variable at a time when comparing runs.';
+    return;
+  }
+
+  setValue('#seed', preset.seed);
+  setValue('#ant-count', preset.antCount);
+  setValue('#grid-size', preset.gridSize);
+  setValue('#max-steps', preset.maxSteps);
+  setValue('#frame-stride', preset.frameStride);
+  setValue('#termination-policy', preset.terminationPolicy);
+  setValue('#nest-x', preset.nest.x);
+  setValue('#nest-y', preset.nest.y);
+  Object.entries(preset.feeders).forEach(([feederId, feeder]) => {
+    const panel = document.querySelector(`[data-feeder-form="${feederId}"]`);
+    Object.entries(feeder).forEach(([field, value]) => {
+      panel.querySelector(`[data-field="${field}"]`).value = String(value);
+    });
+  });
+  presetNote.textContent = preset.description;
 }
 
 function feederPayload(feederId) {
@@ -47,6 +130,7 @@ function feederPayload(feederId) {
 
 function buildPayload() {
   return {
+    scenario_name: PRESETS[presetSelect.value]?.scenarioName || 'custom',
     seed: numberValue('#seed'),
     grid_size: numberValue('#grid-size'),
     nest: { x: numberValue('#nest-x'), y: numberValue('#nest-y') },
@@ -87,7 +171,8 @@ async function runExperiment(event) {
     if (!response.ok) throw new Error(errorMessage(body));
 
     currentTrace = body;
-    currentFrameIndex = body.frames.length - 1;
+    currentFrameIndex = 0;
+    renderedEventCount = -1;
     timeline.max = String(body.frames.length - 1);
     timeline.value = String(currentFrameIndex);
     timeline.disabled = false;
@@ -97,7 +182,10 @@ async function runExperiment(event) {
     recordRun(body);
     renderCurrentFrame();
     renderChart();
-    setMessage(`Completed ${body.result.steps.toLocaleString()} steps from seed ${body.result.seed}.`);
+    setMessage(`Computed ${body.result.steps.toLocaleString()} steps from seed ${body.result.seed}. Replaying from the start.`);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && body.frames.length > 1) {
+      startPlayback();
+    }
   } catch (error) {
     setMessage(error.message, true);
   } finally {
@@ -193,6 +281,42 @@ function drawSimulation(frame) {
   });
 }
 
+function eventLogItem(event) {
+  const item = document.createElement('li');
+  item.dataset.kind = event.kind;
+  const step = document.createElement('span');
+  step.className = 'event-step';
+  step.textContent = `Step ${event.step.toLocaleString()}`;
+  const title = document.createElement('strong');
+  title.textContent = event.title;
+  const detail = document.createElement('span');
+  detail.className = 'event-detail';
+  detail.textContent = event.detail;
+  item.append(step, title, detail);
+  return item;
+}
+
+function renderEventLog(currentStep) {
+  const visibleEvents = (currentTrace?.events || []).filter((event) => event.step <= currentStep);
+  if (visibleEvents.length === renderedEventCount) return;
+
+  if (!visibleEvents.length) {
+    const empty = document.createElement('li');
+    empty.className = 'muted';
+    empty.textContent = 'No significant event has occurred yet.';
+    eventLog.replaceChildren(empty);
+  } else if (renderedEventCount >= 0 && visibleEvents.length > renderedEventCount) {
+    if (renderedEventCount === 0) eventLog.replaceChildren();
+    visibleEvents.slice(renderedEventCount).forEach((event) => {
+      eventLog.append(eventLogItem(event));
+    });
+  } else {
+    eventLog.replaceChildren(...visibleEvents.map(eventLogItem));
+  }
+  renderedEventCount = visibleEvents.length;
+  eventLog.scrollTop = eventLog.scrollHeight;
+}
+
 function renderCurrentFrame() {
   if (!currentTrace || !currentTrace.frames.length) return;
   const frame = currentTrace.frames[currentFrameIndex];
@@ -200,6 +324,7 @@ function renderCurrentFrame() {
   stepValue.textContent = frame.step.toLocaleString();
   timeline.value = String(currentFrameIndex);
   updateMetrics(frame);
+  renderEventLog(frame.step);
 }
 
 function updateMetrics(frame) {
@@ -439,6 +564,12 @@ feederTabs.forEach((tab, index) => {
 });
 
 form.addEventListener('submit', runExperiment);
+presetSelect.addEventListener('change', () => applyPreset(presetSelect.value));
+form.addEventListener('input', (event) => {
+  if (event.target === presetSelect) return;
+  presetSelect.value = 'custom';
+  applyPreset('custom');
+});
 playButton.addEventListener('click', togglePlayback);
 timeline.addEventListener('input', () => {
   stopPlayback();
@@ -461,5 +592,6 @@ document.querySelector('#clear-history').addEventListener('click', () => {
 
 new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
 window.addEventListener('beforeunload', stopPlayback);
+applyPreset(presetSelect.value);
 renderHistory();
 checkHealth();

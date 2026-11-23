@@ -164,6 +164,10 @@ class Simulation:
             Ant(ant_id, config.nest)
             for ant_id in range(1, config.ant_count + 1)
         ]
+        self.last_discoveries: tuple[tuple[int, str], ...] = ()
+        self.last_recruitments: tuple[tuple[int, str], ...] = ()
+        self._step_discoveries: list[tuple[int, str]] = []
+        self._step_recruitments: list[tuple[int, str]] = []
         if ants is not None and any(ant.holding_food for ant in self.ants):
             raise ValueError('supplied ants must start with holding_food=False')
         self._validate_ants()
@@ -240,15 +244,19 @@ class Simulation:
             ants_by_id[ant_id].commitment = None
         for target_id, feeder_ids in sorted(proposals.items()):
             choices = sorted(feeder_ids)
-            ants_by_id[target_id].commitment = (
+            commitment = (
                 choices[0] if len(choices) == 1 else self.rng.choice(choices)
             )
+            ants_by_id[target_id].commitment = commitment
+            self._step_recruitments.append((target_id, commitment))
 
     def step(self) -> TerminationReason | None:
         if self.steps >= self.config.max_steps:
             raise RuntimeError('simulation has reached max_steps')
         if self._termination_reason() is not None:
             raise RuntimeError('simulation has already reached its termination condition')
+        self._step_discoveries = []
+        self._step_recruitments = []
         committed_at_start = frozenset(
             ant.ant_id
             for ant in self.ants
@@ -257,6 +265,8 @@ class Simulation:
         for ant in sorted(self.ants, key=lambda item: item.ant_id):
             self._move_ant(ant)
         self.update_social_state(committed_at_start=committed_at_start)
+        self.last_discoveries = tuple(self._step_discoveries)
+        self.last_recruitments = tuple(self._step_recruitments)
         self.steps += 1
         self.assert_invariants()
         return self.termination_reason()
@@ -340,6 +350,7 @@ class Simulation:
                 continue
             if self._event_occurs(feeder.quality):
                 ant.commitment = feeder_id
+                self._step_discoveries.append((ant.ant_id, feeder_id))
                 self._pick_up_food(ant, feeder_id)
             return
 

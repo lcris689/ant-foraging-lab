@@ -11,6 +11,8 @@ from ant_foraging_lab.batch import run_batch, write_batch_csv
 from ant_foraging_lab.batch_cli import main as batch_main
 from ant_foraging_lab.model import FeederConfig, Position, SimulationConfig
 from ant_foraging_lab.scenarios import (
+    guided_demo_scenario,
+    no_recruitment_guided_demo,
     no_recruitment_three_feeder,
     three_feeder_scenario,
 )
@@ -122,6 +124,34 @@ def test_no_recruitment_baseline_changes_only_recruitment_rates():
     treatment = three_feeder_scenario(seed=689, max_steps=50)
     baseline = no_recruitment_three_feeder(seed=689, max_steps=50)
 
+    assert baseline.seed == treatment.seed
+    assert baseline.max_steps == treatment.max_steps
+    assert [feeder.recruitment_rate for feeder in baseline.feeders] == [0.0, 0.0, 0.0]
+    assert [
+        (feeder.feeder_id, feeder.position, feeder.quality, feeder.attrition_rate, feeder.food)
+        for feeder in baseline.feeders
+    ] == [
+        (feeder.feeder_id, feeder.position, feeder.quality, feeder.attrition_rate, feeder.food)
+        for feeder in treatment.feeders
+    ]
+
+
+def test_guided_demo_is_compact_and_its_baseline_changes_only_recruitment():
+    treatment = guided_demo_scenario(seed=689, max_steps=400)
+    baseline = no_recruitment_guided_demo(seed=689, max_steps=400)
+
+    assert treatment.grid_size == 40
+    assert treatment.nest == Position(20, 20)
+    assert treatment.ant_count == 120
+    assert [feeder.position for feeder in treatment.feeders] == [
+        Position(10, 20),
+        Position(30, 20),
+        Position(20, 30),
+    ]
+    assert [feeder.quality for feeder in treatment.feeders] == [1.0, 1.0, 1.0]
+    assert [feeder.recruitment_rate for feeder in treatment.feeders] == [0.75, 0.75, 0.75]
+    assert [feeder.attrition_rate for feeder in treatment.feeders] == [0.003, 0.003, 0.003]
+    assert [feeder.food for feeder in treatment.feeders] == [1000, 1000, 1000]
     assert baseline.seed == treatment.seed
     assert baseline.max_steps == treatment.max_steps
     assert [feeder.recruitment_rate for feeder in baseline.feeders] == [0.0, 0.0, 0.0]

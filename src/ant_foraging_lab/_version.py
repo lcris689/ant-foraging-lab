@@ -1,5 +1,5 @@
 """Package and model version identifiers."""
 
-__version__ = '0.2.0'
-MODEL_VERSION = __version__
-TRACE_SCHEMA_VERSION = 1
+__version__ = '0.3.0'
+MODEL_VERSION = '0.2.0'
+TRACE_SCHEMA_VERSION = 2

@@ -30,13 +30,26 @@
 
         <form id="experiment-form">
           <fieldset>
+            <legend>Starting point</legend>
+            <label>Preset
+              <select id="preset">
+                <option value="guided" selected>Guided mechanism demo</option>
+                <option value="reference">Reference experiment</option>
+                <option value="noRecruitment">Guided demo — recruitment off</option>
+                <option value="custom">Custom settings</option>
+              </select>
+            </label>
+            <p class="preset-note" id="preset-note">A compact teaching setup that makes discovery, recruitment, and delivery easier to observe. It is not comparative evidence.</p>
+          </fieldset>
+
+          <fieldset>
             <legend>Run settings</legend>
             <div class="field-grid two-columns">
               <label>Seed<input id="seed" type="number" min="0" max="4294967295" value="689" required></label>
-              <label>Ants<input id="ant-count" type="number" min="1" max="500" value="200" required></label>
-              <label>Grid size<input id="grid-size" type="number" min="20" max="150" value="100" required></label>
-              <label>Max steps<input id="max-steps" type="number" min="1" max="5000" value="1000" required></label>
-              <label>Sample every<input id="frame-stride" type="number" min="1" max="250" value="10" required></label>
+              <label>Ants<input id="ant-count" type="number" min="1" max="500" value="120" required></label>
+              <label>Grid size<input id="grid-size" type="number" min="20" max="150" value="40" required></label>
+              <label>Max steps<input id="max-steps" type="number" min="1" max="5000" value="400" required></label>
+              <label>Sample every<input id="frame-stride" type="number" min="1" max="250" value="4" required></label>
               <label>Stop rule
                 <select id="termination-policy">
                   <option value="fixed_steps">Fixed steps</option>
@@ -46,8 +59,8 @@
               </label>
             </div>
             <div class="field-grid two-columns compact-fields">
-              <label>Nest X<input id="nest-x" type="number" min="0" value="50" required></label>
-              <label>Nest Y<input id="nest-y" type="number" min="0" value="50" required></label>
+              <label>Nest X<input id="nest-x" type="number" min="0" value="20" required></label>
+              <label>Nest Y<input id="nest-y" type="number" min="0" value="20" required></label>
             </div>
           </fieldset>
 
@@ -61,32 +74,32 @@
 
             <div class="feeder-form is-active" id="feeder-panel-a" role="tabpanel" aria-labelledby="feeder-tab-a" data-feeder-form="A">
               <div class="field-grid two-columns">
-                <label>X<input data-field="x" type="number" min="0" value="25" required></label>
-                <label>Y<input data-field="y" type="number" min="0" value="75" required></label>
-                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="0.75" required></label>
+                <label>X<input data-field="x" type="number" min="0" value="10" required></label>
+                <label>Y<input data-field="y" type="number" min="0" value="20" required></label>
+                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="1" required></label>
                 <label>Food<input data-field="food" type="number" min="1" max="100000" value="1000" required></label>
                 <label>Recruitment<input data-field="recruitment" type="number" min="0" max="1" step="0.001" value="0.75" required></label>
-                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
+                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.003" required></label>
               </div>
             </div>
             <div class="feeder-form" id="feeder-panel-b" role="tabpanel" aria-labelledby="feeder-tab-b" data-feeder-form="B" hidden>
               <div class="field-grid two-columns">
-                <label>X<input data-field="x" type="number" min="0" value="75" required></label>
-                <label>Y<input data-field="y" type="number" min="0" value="25" required></label>
-                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="0.75" required></label>
+                <label>X<input data-field="x" type="number" min="0" value="30" required></label>
+                <label>Y<input data-field="y" type="number" min="0" value="20" required></label>
+                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="1" required></label>
                 <label>Food<input data-field="food" type="number" min="1" max="100000" value="1000" required></label>
                 <label>Recruitment<input data-field="recruitment" type="number" min="0" max="1" step="0.001" value="0.75" required></label>
-                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
+                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.003" required></label>
               </div>
             </div>
             <div class="feeder-form" id="feeder-panel-c" role="tabpanel" aria-labelledby="feeder-tab-c" data-feeder-form="C" hidden>
               <div class="field-grid two-columns">
-                <label>X<input data-field="x" type="number" min="0" value="75" required></label>
-                <label>Y<input data-field="y" type="number" min="0" value="75" required></label>
-                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="0.75" required></label>
+                <label>X<input data-field="x" type="number" min="0" value="20" required></label>
+                <label>Y<input data-field="y" type="number" min="0" value="30" required></label>
+                <label>Quality<input data-field="quality" type="number" min="0" max="1" step="0.01" value="1" required></label>
                 <label>Food<input data-field="food" type="number" min="1" max="100000" value="1000" required></label>
                 <label>Recruitment<input data-field="recruitment" type="number" min="0" max="1" step="0.001" value="0.75" required></label>
-                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.009" required></label>
+                <label>Attrition<input data-field="attrition" type="number" min="0" max="1" step="0.001" value="0.003" required></label>
               </div>
             </div>
           </fieldset>
@@ -94,6 +107,25 @@
           <button class="primary-action" id="run-button" type="submit">Run experiment</button>
           <p class="form-message" id="form-message" aria-live="polite">Ready.</p>
         </form>
+
+        <details class="variable-guide">
+          <summary>Variable guide</summary>
+          <p>Directional effects are typical, not guaranteed. Every run is stochastic.</p>
+          <dl>
+            <div><dt>Seed</dt><dd>Replays one random sequence. Changing it changes individual paths and outcomes, not the intended scenario.</dd></div>
+            <div><dt>Ants</dt><dd>Colony size (1–500). More ants usually increase encounters and deliveries, but also increase compute.</dd></div>
+            <div><dt>Grid size</dt><dd>Width and height (20–150 cells). Larger grids usually make exact feeder discovery slower and sparser.</dd></div>
+            <div><dt>Max steps</dt><dd>Absolute run horizon (1–5,000). More steps allow more discovery and transport but use more compute.</dd></div>
+            <div><dt>Sample every</dt><dd>Steps between recorded frames (1–250). Smaller values make smoother replays and larger downloads without changing model outcomes.</dd></div>
+            <div><dt>Stop rule</dt><dd>Ends at a fixed horizon, first empty feeder, or all empty feeders. Changing it changes when results are observed.</dd></div>
+            <div><dt>Nest X / Y</dt><dd>Home and starting coordinates. Moving the nest changes travel distances to every feeder.</dd></div>
+            <div><dt>Feeder X / Y</dt><dd>Resource coordinates. Feeders nearer the nest are usually found and serviced sooner.</dd></div>
+            <div><dt>Quality</dt><dd>Probability (0–1) that an uncommitted ant commits after reaching that feeder. Higher values make accepted discoveries more likely.</dd></div>
+            <div><dt>Food</dt><dd>Starting inventory. More food keeps a feeder available longer but does not make it easier to find.</dd></div>
+            <div><dt>Recruitment</dt><dd>Probability (0–1) for one eligible nest-based recruitment attempt. Higher values usually spread an established commitment faster.</dd></div>
+            <div><dt>Attrition</dt><dd>Per-step probability (0–1) that a committed ant becomes uncommitted. Higher values make allocations less persistent.</dd></div>
+          </dl>
+        </details>
       </aside>
 
       <section class="simulation-panel" aria-labelledby="simulation-title">
@@ -152,6 +184,13 @@
         <div class="allocation-block">
           <h3>Allocation</h3>
           <div id="allocation-bars" class="allocation-bars"><p class="muted">No run data.</p></div>
+        </div>
+
+        <div class="event-block">
+          <h3>Significant events</h3>
+          <ol id="event-log" class="event-log" role="log" aria-live="polite" aria-relevant="additions">
+            <li class="muted">Run an experiment, then play or scrub the timeline.</li>
+          </ol>
         </div>
 
         <div class="data-actions">

@@ -1,5 +1,6 @@
 from math import ceil
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +26,12 @@ class FeederInput(BaseModel):
 
 
 class RunRequest(BaseModel):
+    scenario_name: Literal[
+        'custom',
+        'guided_demo',
+        'reference_experiment',
+        'guided_no_recruitment',
+    ] = 'custom'
     seed: int = Field(ge=0, le=2**32 - 1)
     grid_size: int = Field(ge=2, le=150)
     nest: PositionInput
@@ -99,7 +106,11 @@ def health() -> dict[str, str]:
 
 @app.post('/api/runs')
 def create_run(request: RunRequest) -> dict:
-    trace = run_experiment(request.to_config(), frame_stride=request.frame_stride)
+    trace = run_experiment(
+        request.to_config(),
+        frame_stride=request.frame_stride,
+        scenario_name=request.scenario_name,
+    )
     return trace_to_dict(trace)
 
 

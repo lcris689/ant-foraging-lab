@@ -232,6 +232,31 @@ input:hover, select:hover { border-color: var(--border-strong); }
 }
 .form-message.is-error { color: var(--danger); }
 
+.preset-note,
+.variable-guide > p {
+  margin: .55rem 0 0;
+  color: var(--muted);
+  font-size: .7rem;
+  line-height: 1.5;
+}
+
+.variable-guide {
+  border-top: 1px solid var(--border);
+  padding-top: .85rem;
+}
+
+.variable-guide summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+}
+
+.variable-guide dl { margin: .8rem 0 0; }
+.variable-guide dl div { padding: .55rem 0; border-top: 1px solid var(--border); }
+.variable-guide dt { color: var(--ink); font-size: .72rem; font-weight: 700; }
+.variable-guide dd { margin: .2rem 0 0; color: var(--muted); font-size: .68rem; line-height: 1.45; }
+
 .simulation-heading { margin-bottom: .8rem; }
 .step-readout { display: flex; align-items: baseline; gap: .45rem; color: var(--muted); font-size: .72rem; text-transform: uppercase; }
 .step-readout strong { color: var(--ink); font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 1.1rem; }
@@ -311,6 +336,32 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .allocation-fill[data-feeder="C"] { background: var(--c); }
 .muted { color: var(--muted); font-size: .75rem; }
 
+.event-block { margin: 1.5rem 0; }
+.event-log {
+  max-height: 19rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+.event-log li {
+  display: grid;
+  gap: .18rem;
+  padding: .65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.event-log .event-step {
+  color: var(--accent);
+  font-family: ui-monospace, "Cascadia Mono", monospace;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.event-log strong { font-size: .72rem; }
+.event-log .event-detail { color: var(--muted); font-size: .68rem; line-height: 1.4; }
+
 .data-actions { display: grid; gap: .5rem; }
 .data-note { margin: .75rem 0 0; color: var(--muted); font-size: .68rem; line-height: 1.5; }
 
@@ -358,8 +409,8 @@ footer p { margin: 0; }
   .site-header { display: block; padding: 1.5rem 1rem 1rem; }
   .header-note { margin-top: 1rem; }
   .lab-shell { display: flex; flex-direction: column; border-inline: 0; }
-  .simulation-panel { order: 1; padding-inline: 1rem; }
-  .controls-panel { order: 2; }
+  .controls-panel { order: 1; }
+  .simulation-panel { order: 2; padding-inline: 1rem; }
   .metrics-panel { order: 3; }
   .chart-panel { order: 4; }
   .history-panel { order: 5; }
