@@ -135,6 +135,24 @@ def test_delivery_is_logged_before_recruitment_when_both_share_a_step():
     )
 
 
+def test_feeder_depletion_is_logged_before_same_step_recruitment():
+    config = SimulationConfig(
+        grid_size=3,
+        nest=Position(1, 1),
+        feeders=(FeederConfig('A', Position(1, 2), 1.0, 1.0, 0.0, 4),),
+        ant_count=3,
+        max_steps=30,
+        seed=7,
+    )
+
+    trace = run_experiment(config, frame_stride=10)
+
+    shared_step_events = [event.kind for event in trace.events if event.step == 8]
+    assert shared_step_events.index('feeder_depleted') < shared_step_events.index(
+        'first_recruitment'
+    )
+
+
 def test_export_records_versioned_model_and_rng_provenance():
     trace = run_experiment(
         small_config(),
